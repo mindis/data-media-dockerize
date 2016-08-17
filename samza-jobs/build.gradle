@@ -1,0 +1,299 @@
+// ./gradlew publish -Pbranch=develop [-PbuildNumber=1]
+// -> Upload s3://packages-magnetic-com.s3.amazonaws.com/maven/snapshots/com/magnetic/enrichment/enrichment-pipeline/0.1-RC/enrichment-pipeline-0.1-RC-dist.tar.gz
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        // aws-java-sdk for downloading dependencies from s3 
+        classpath 'com.amazonaws:aws-java-sdk:1.11.4'
+        // run scalatest instead of junit
+        classpath "gradle.plugin.com.github.maiflai:gradle-scalatest:0.12"
+        classpath "net.saliman:gradle-cobertura-plugin:2.3.1"
+//        classpath "gradle.plugin.org.scoverage:gradle-scoverage:2.0.1"
+
+        classpath "io.druid:tranquility-core_2.11:0.8.1"
+        classpath "io.druid:tranquility-samza_2.10:0.8.1"
+    }
+}
+
+plugins {
+//    id 'org.ajoberstar.grgit' version '1.4.2'
+//    id 'org.ajoberstar.release-opinion' version '1.4.2'
+    id 'com.github.maiflai.scalatest' version '0.12'
+    id "net.saliman.cobertura" version '2.3.2'
+}
+
+apply plugin: 'scala'
+//apply plugin: 'maven-publish'
+//apply plugin: "net.saliman.cobertura"
+//apply plugin: "org.scoverage"
+
+//import org.ajoberstar.gradle.git.release.opinion.Strategies
+//import org.ajoberstar.grgit.Grgit
+
+//release {
+//    grgit = Grgit.open()
+//    defaultVersionStrategy = Strategies.SNAPSHOT
+//}
+
+defaultTasks 'distTar'
+
+task wrapper(type: Wrapper) {
+    description = "Updates gradlew and supporting files."
+    gradleVersion = '2.13'
+}
+
+group 'com.magnetic.enrichment'
+def artifactName = 'enrichment-pipeline'
+
+// make the samza distribution .tgz file
+task distTar(dependsOn: build, type: Tar) {
+    destinationDir(new File(project.buildDir, "/distributions"))
+    compression(Compression.GZIP)
+    classifier('dist')
+    extension('tar.gz')
+    into("config") {
+        from("src/config") {
+            include "itest.properties"
+            // expand the Maven tokens with Gradle equivalents.  Also change 'target' (Maven) to 'build/distributions' (Gradle)
+//            filter { String line -> line
+//                    .replaceAll('[\$][{]basedir[}]', project.projectDir.toString())
+//                    .replaceAll('[\$][{]project.artifactId[}]', project.name.toString())
+//                    .replaceAll('/target/', '/build/distributions/')
+//                    .replaceAll('[\$][{]pom.version[}]', version)
+//            }
+        }
+    }
+
+    into("bin") {
+        from {
+            configurations.explode.collect { tarTree(it) }
+        }
+        from("bin") {
+            include "restart-job.sh"
+        }
+    }
+
+    into("lib") {
+        from configurations.runtime
+        from configurations.runtime.artifacts.files
+        from("src/resources/") {
+            include "log4j.xml"
+        }
+    }
+}
+
+//import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+// this requires your aws credentials in ~/.aws/credentials
+//def defaultCredentials = new DefaultAWSCredentialsProviderChain().getCredentials()
+
+//publishing.publications {
+//    myPublication(MavenPublication) {
+//        artifactId "$artifactName"
+//        artifact distTar
+//    }
+//}
+
+//publishing.repositories {
+//    maven {
+//        if (version.toString().endsWith('SNAPSHOT')) {
+//            url 's3://packages-magnetic-com.s3.amazonaws.com/maven/snapshots'
+//            credentials(AwsCredentials) {
+//                accessKey defaultCredentials.getAWSAccessKeyId()
+//                secretKey defaultCredentials.getAWSSecretKey()
+//            }
+//        } else {
+//            url 's3://packages-magnetic-com.s3.amazonaws.com/maven/releases'
+//            credentials(AwsCredentials) {
+//                accessKey defaultCredentials.getAWSAccessKeyId()
+//                secretKey defaultCredentials.getAWSSecretKey()
+//            }
+//        }
+//    }
+//}
+
+repositories {
+    mavenCentral()
+    maven { url "https://repository.apache.org/content/groups/public" }
+    maven { url "https://repository.cloudera.com/artifactory/repo/" }
+//    maven {
+//        url "s3://packages-magnetic-com/maven/releases"
+//        credentials(AwsCredentials) {
+//            accessKey defaultCredentials.getAWSAccessKeyId()
+//            secretKey defaultCredentials.getAWSSecretKey()
+//        }
+//    }
+}
+
+// a configuration for dependencies that need exploding into package
+configurations {
+    explode
+}
+
+configurations.all {
+    resolutionStrategy {
+        eachDependency { DependencyResolveDetails details ->
+            //specifying a fixed version for all libraries with 'org.apache.hadoop' group
+            if (details.requested.group == 'org.apache.hadoop' && !details.requested.name.equals('hadoop-core')) {
+                details.useVersion "$HADOOP_VERSION"
+            }
+        }
+        force 'org.apache.hadoop:hadoop-core:2.6.0-mr1-cdh5.6.0'
+        force 'org.apache.zookeeper:zookeeper:3.4.5-cdh5.6.0'
+    }
+}
+
+sourceSets {
+    main {
+        scala {
+            srcDirs = ['src/main/scala']
+        }
+    }
+    test {
+        scala {
+            srcDirs = ['src/test/scala', 'src/acceptance/scala']
+        }
+    }
+}
+
+dependencies {
+    compile 'org.scala-lang:scala-library:2.10.1'
+}
+
+dependencies {
+//    compile(group: 'com.magnetic', name: 'messages', version: '0.0.33')
+    compile(group: 'org.codehaus.jackson', name: 'jackson-jaxrs', version: '1.9.13')
+    compile(group: 'com.datadoghq', name: 'java-dogstatsd-client', version: '2.1.1')
+//    compile(group: 'org.apache.solr', name: 'solr-solrj', version: "$SOLRJ_VERSION")
+    compile(group: 'org.slf4j', name: 'slf4j-api', version: "$SLF4J_VERSION")
+    compile(group: 'org.slf4j', name: 'slf4j-log4j12', version: "$SLF4J_VERSION")
+    compile(group: 'org.schwering', name: 'irclib', version: '1.10')
+    compile(group: 'org.apache.samza', name: 'samza-api', version: "$SAMZA_VERSION")
+    compile(group: 'org.apache.samza', name: 'samza-kv_2.10', version: "$SAMZA_VERSION")
+
+    explode(group: 'org.apache.samza', name: 'samza-shell', ext: 'tgz', classifier: 'dist', version: "$SAMZA_VERSION")
+
+    testCompile(group: 'org.mockito', name: 'mockito-all', version: '1.10.19')
+    testCompile(group: 'org.scalatest', name: 'scalatest_2.10', version: '2+')
+
+    testRuntime(group: 'org.pegdown', name: 'pegdown', version: '1.1.0')
+
+    runtime(group: 'com.getsentry.raven', name: 'raven-log4j', version: "7.2.3")
+    runtime(group: 'org.apache.samza', name: 'samza-core_2.10', version: "$SAMZA_VERSION")
+    runtime(group: 'org.apache.samza', name: 'samza-log4j', version: "$SAMZA_VERSION")
+    runtime(group: 'org.apache.samza', name: 'samza-shell', version: "$SAMZA_VERSION")
+    runtime(group: 'org.apache.samza', name: 'samza-yarn_2.10', version: "$SAMZA_VERSION")
+    runtime(group: 'org.apache.samza', name: 'samza-kv-rocksdb_2.10', version: "$SAMZA_VERSION")
+    runtime(group: 'org.apache.samza', name: 'samza-kafka_2.10', version: "$SAMZA_VERSION")
+    runtime(group: 'org.apache.kafka', name: 'kafka_2.10', version: "$KAFKA_VERSION")
+
+//    runtime(group: "org.apache.hadoop", name: "hadoop-hdfs", version: "$HADOOP_VERSION")
+//    runtime(group: "org.apache.hadoop", name: "hadoop-annotations", version: "$HADOOP_VERSION")
+//    runtime(group: "org.apache.hadoop", name: "hadoop-auth", version: "$HADOOP_VERSION")
+//    runtime(group: "org.apache.hadoop", name: "hadoop-common", version: "$HADOOP_VERSION")
+//    runtime(group: "org.apache.hadoop", name: "hadoop-hdfs", version: "$HADOOP_VERSION")
+//    runtime(group: "org.apache.hadoop", name: "hadoop-yarn-api", version: "$HADOOP_VERSION")
+//    runtime(group: "org.apache.hadoop", name: "hadoop-yarn-client", version: "$HADOOP_VERSION")
+//    runtime(group: "org.apache.hadoop", name: "hadoop-yarn-common", version: "$HADOOP_VERSION")
+
+//    scoverage 'org.scoverage:scalac-scoverage-plugin_2.10:1.1.0', 'org.scoverage:scalac-scoverage-runtime_2.10:1.1.0'
+}
+
+// install everything
+task installGrid(type: Exec) {
+    workingDir(project.projectDir)
+    commandLine("bin/grid", "install", "all")
+    outputs.upToDateWhen {
+        ["kafka", "zookeeper", "yarn"].every {
+            (new File(project.projectDir, "deploy/" + it)).exists()
+        }
+    }
+}
+
+// update the Samza job
+task deployEnrichmentPipeline(dependsOn: [distTar, installGrid], type: Sync) {
+    into(new File(project.projectDir, "/deploy/samza"))
+    from(tarTree(distTar.archivePath))
+}
+
+// run everything
+task startGrid(type: Exec) {
+    workingDir(project.projectDir)
+    commandLine("bin/grid", "start", "all")
+    outputs.upToDateWhen {
+        // use running zookeeper as proxy
+        File zookeeperPidFile = new File("/tmp/zookeeper/zookeeper_server.pid")
+        zookeeperPidFile.exists() &&
+                "kill -0 ${zookeeperPidFile.text}".execute().waitFor() == 0
+    }
+}
+
+// stop everything
+task stopGrid(type: Exec) {
+    workingDir(project.projectDir)
+    commandLine("bin/grid", "stop", "all")
+}
+
+//
+// Samza helpers
+//
+
+// helper task to run Samza jobs
+class SamzaTask extends DefaultTask {
+    String configFile;
+
+    @TaskAction
+    def startSamza() {
+        project.exec {
+            workingDir(project.projectDir)
+            commandLine("deploy/samza/bin/run-job.sh",
+                    "--config-factory=org.apache.samza.config.factories.PropertiesConfigFactory",
+                    "--config-path=file://${project.projectDir}/deploy/samza/config/${configFile}")
+        }
+    }
+}
+
+// helper to run the example Samza job
+task runEnrichmentExample(dependsOn: [startGrid, deployEnrichmentPipeline], type: SamzaTask) {
+    configFile("enrichment-keyword-example.properties")
+}
+//
+// Kafka helpers
+//
+
+// show all Kafka topics
+task listKafkaTopics(type: Exec) {
+    workingDir(project.projectDir)
+    commandLine("deploy/kafka/bin/kafka-topics.sh",
+            "--zookeeper", "localhost:2181",
+            "--list")
+}
+
+// helper task to monitor a Kafka topic
+class KafkaDumpTask extends DefaultTask {
+    String topic;
+
+    @TaskAction
+    def dumpTopic() {
+        project.exec {
+            workingDir(project.projectDir)
+            commandLine("deploy/kafka/bin/kafka-console-consumer.sh",
+                    "--zookeeper", "localhost:2181",
+                    "--topic", "${topic}")
+        }
+    }
+}
+
+// helper to dump the enriched.search.topic topic
+task dumpEnriched(dependsOn: startGrid, type: KafkaDumpTask) {
+    topic("tracking-search-enriched")
+}
+
+cobertura {
+    coverageFormats = ["xml","html"]
+}
