@@ -1,0 +1,74 @@
+{
+  "dataSources" : {
+    "itest" : {
+      "spec" : {
+        "dataSchema" : {
+          "dataSource" : "itest",
+          "parser" : {
+            "type" : "string",
+            "parseSpec" : {
+              "timestampSpec" : {
+                "column" : "timestamp",
+                "format" : "auto"
+              },
+              "dimensionsSpec" : {
+                "dimensions" : [
+                  "unit",
+                  "http_method",
+                  "http_code",
+                  "page",
+                  "metricType",
+                  "server"
+                ],
+                "dimensionExclusions" : [
+                  "timestamp",
+                  "value"
+                ]
+              },
+              "format" : "json"
+            }
+          },
+          "granularitySpec" : {
+            "type" : "uniform",
+            "segmentGranularity" : "hour",
+            "queryGranularity" : "none"
+          },
+          "metricsSpec" : [
+            {
+              "name" : "count",
+              "type" : "count"
+            },
+            {
+              "name" : "value",
+              "type" : "longSum",
+              "fieldName" : "value"
+            }
+          ]
+        },
+        "ioConfig" : {
+          "type" : "realtime"
+        },
+        "tuningConfig" : {
+          "type" : "realtime",
+          "maxRowsInMemory" : "100000",
+          "intermediatePersistPeriod" : "PT10M",
+          "windowPeriod" : "PT10M"
+        }
+      },
+      "properties" : {
+        "task.partitions" : "1",
+        "task.replicants" : "1",
+        "topicPattern" : "itest_out"
+      }
+    }
+  },
+  "properties" : {
+    "zookeeper.connect" : "zookeeper:2181",
+    "druid.discovery.curator.path" : "/druid/discovery",
+    "druid.selectors.indexing.serviceName" : "druid/overlord",
+    "http.port" : "8200",
+    "http.threads" : "8",
+    "kafka.zookeeper.connect" : "zookeeper:2181",
+    "kafka.group.id" : "tranquility-kafka"
+  }
+}
