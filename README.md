@@ -3,7 +3,7 @@ Dockerizing kafka, samza and druid
 
 sudo ./gradlew distTar
 
-$KAFKA_HOME/bin/kafka-topics.sh --describe --topic itest --zookeeper zookeper:2181
+$KAFKA_HOME/bin/kafka-topics.sh --describe --topic itest --zookeeper zookeeper:2181
 
 $KAFKA_HOME/bin/kafka-console-producer.sh --topic=itest --broker-list=kafka:9092
 
