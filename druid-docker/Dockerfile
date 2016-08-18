@@ -1,10 +1,10 @@
 FROM java:8 
 
-WORKDIR "/srv/druid"
-RUN curl http://www.gtlib.gatech.edu/pub/apache/zookeeper/zookeeper-3.4.6/zookeeper-3.4.6.tar.gz -o zookeeper-3.4.6.tar.gz
-RUN tar -xzf zookeeper-3.4.6.tar.gz
-WORKDIR "/srv/druid/zookeeper-3.4.6"
-RUN cp conf/zoo_sample.cfg conf/zoo.cfg
+#WORKDIR "/srv/druid"
+#RUN curl http://www.gtlib.gatech.edu/pub/apache/zookeeper/zookeeper-3.4.6/zookeeper-3.4.6.tar.gz -o zookeeper-3.4.6.tar.gz
+#RUN tar -xzf zookeeper-3.4.6.tar.gz
+#WORKDIR "/srv/druid/zookeeper-3.4.6"
+#RUN cp conf/zoo_sample.cfg conf/zoo.cfg
 
 WORKDIR "/srv/druid"
 RUN curl -O http://static.druid.io/artifacts/releases/druid-0.9.1.1-bin.tar.gz

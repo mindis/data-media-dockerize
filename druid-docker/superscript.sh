@@ -1,6 +1,6 @@
 # Zookeeper
-/srv/druid/zookeeper-3.4.6/bin/zkServer.sh start &
-sleep 10
+# /srv/druid/zookeeper-3.4.6/bin/zkServer.sh start &
+# sleep 10
 
 # Druid
 cd /srv/druid/druid-0.9.1.1
