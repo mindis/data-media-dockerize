@@ -1,5 +1,5 @@
 function build_behave_image(){
-    pushd ./workspace/behave
+    pushd behave
     sudo docker build -t 'magnetic/behave' .
     sudo docker run magnetic/behave:latest 
     popd
