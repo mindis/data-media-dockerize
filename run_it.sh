@@ -17,6 +17,16 @@ function build_behave_image(){
     popd
 }
 
+
+function wait_for_container(){
+    CONTAINER_URL="$1"
+    while ! curl $CONTAINER_URL
+    do
+      echo "$(date) - still waiting for $CONTAINER_URL"
+      sleep 1
+    done
+}
+
 function run_tests(){
     pushd behave
     virtualenv data-media-it
@@ -44,15 +54,22 @@ function copy_logs(){
 LOGDIR=$(echo $1 | sed 's:/*$::')
 
 # Destroy containers when done
-#trap "copy_logs $LOGDIR && docker-compose -f docker-compose.yml down && docker rmi magnetic/samza:latest && docker rmi magnetic/druid:latest && docker rm docker_behave_1 && docker rmi magnetic/behave:latest" EXIT
-trap "copy_logs $LOGDIR " EXIT
+# trap "copy_logs $LOGDIR && docker-compose -f docker-compose.yml down && docker rmi magnetic/samza:latest && docker rmi magnetic/druid:latest && docker rm docker_behave_1 && docker rmi magnetic/behave:latest" EXIT
+trap "copy_logs $LOGDIR && docker-compose -f docker-compose.yml down" EXIT
+# trap "copy_logs $LOGDIR " EXIT
 
-#build_samza_image
-#build_druid_image
-#build_behave_image
+build_samza_image
+build_druid_image
+build_behave_image
 
-#sudo docker-compose up -d  
+sudo docker-compose up -d  
+
+wait_for_container zookeeper:2181
+wait_for_container kafka:9092
+wait_for_container druid:8082
+wait_for_container druid:8081
+wait_for_container druid:8083
+wait_for_container druid:8091
+wait_for_container druid:8090
 
 run_tests
-
-sleep 10
