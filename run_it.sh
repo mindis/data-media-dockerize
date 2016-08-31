@@ -18,7 +18,7 @@ function build_behave_image(){
 }
 
 function run_tests(){
-    docker run -itd magnetic/behave:latest
+    docker run -itd -name docker_behave_1 magnetic/behave:latest
 }
 
 function copy_logs(){
@@ -37,7 +37,7 @@ function copy_logs(){
 LOGDIR=$(echo $1 | sed 's:/*$::')
 
 # Destroy containers when done
-trap "copy_logs $LOGDIR && docker-compose -f docker-compose.yml down && docker rmi magnetic/samza:latest && docker rmi magnetic/druid:latest && docker rmi magnetic/behave:latest" EXIT
+trap "copy_logs $LOGDIR && docker-compose -f docker-compose.yml down && docker rmi magnetic/samza:latest && docker rmi magnetic/druid:latest && docker rmi -f magnetic/behave:latest" EXIT
 
 build_samza_image
 build_druid_image
