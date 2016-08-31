@@ -64,12 +64,12 @@ build_behave_image
 
 sudo docker-compose up -d  
 
-wait_for_container zookeeper:2181
-wait_for_container kafka:9092
-wait_for_container druid:8082
-wait_for_container druid:8081
-wait_for_container druid:8083
-wait_for_container druid:8091
-wait_for_container druid:8090
+wait_for_container localhost:2181
+wait_for_container localhost:9092
+wait_for_container localhost:8082
+wait_for_container localhost:8081
+wait_for_container localhost:8083
+wait_for_container localhost:8091
+wait_for_container localhost:8090
 
 run_tests
