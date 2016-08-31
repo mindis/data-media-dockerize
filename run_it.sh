@@ -17,6 +17,10 @@ function build_behave_image(){
     popd
 }
 
+function run_tests(){
+    docker run -it docker_behave_1
+}
+
 function copy_logs(){
     OUTDIR="$1"
     if [ ! -z $OUTDIR ]
@@ -40,3 +44,5 @@ build_druid_image
 build_behave_image
 
 sudo docker-compose up -d  
+
+run_tests
