@@ -46,3 +46,5 @@ build_behave_image
 sudo docker-compose up -d  
 
 run_tests
+
+sleep 10
