@@ -28,7 +28,7 @@ function copy_logs(){
         # backup all containers logs 
         for CONTAINER in $(docker ps -a --format "{{.Names}}")
         do
-            docker logs "$CONTAINER" &> "$OUTDIR"/"$CONTAINER".log
+            docker logs "$CONTAINER" &> "$OUTDIR"/"$CONTAINER".log.txt
         done
     fi
 }
