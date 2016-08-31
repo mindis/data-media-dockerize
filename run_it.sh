@@ -20,9 +20,19 @@ function build_behave_image(){
 
 function wait_for_container(){
     CONTAINER_NAME="$1"
+    local SERVICE_WAIT_TIMEOUT_SEC=10
+    echo "Waiting for $PORT to start..."
+    local CURRENT_WAIT_TIME=0
     until [ "`sudo docker inspect -f {{.State.Running}} $CONTAINER_NAME`"=="true" ]; do
+        printf '.'
+        if [ $((++CURRENT_WAIT_TIME)) -eq $SERVICE_WAIT_TIMEOUT_SEC ]; then
+            printf "\nError: timed out while waiting for $PORT to start.\n"
+            exit 1
+        fi
         sleep 1;
     done;
+    printf '\n'
+    echo "$CONTAINER_NAME has started";
 }
 
 function run_tests(){
