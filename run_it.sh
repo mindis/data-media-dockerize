@@ -37,7 +37,7 @@ function copy_logs(){
 LOGDIR=$(echo $1 | sed 's:/*$::')
 
 # Destroy containers when done
-trap "copy_logs $LOGDIR && docker-compose -f docker-compose.yml down && docker rmi magnetic/samza:latest && docker rmi magnetic/druid:latest && docker rmi -f magnetic/behave:latest" EXIT
+trap "copy_logs $LOGDIR && docker-compose -f docker-compose.yml down && docker rmi magnetic/samza:latest && docker rmi magnetic/druid:latest && docker rm docker_behave_1 && docker rmi magnetic/behave:latest" EXIT
 
 build_samza_image
 build_druid_image
