@@ -1,19 +1,19 @@
 function build_samza_image(){
     pushd samza-docker
-    sudo docker build -t 'magnetic/samza' .
+    docker build -t 'magnetic/samza' .
     popd
 }
 
 function build_druid_image(){
     pushd druid-docker
-    sudo docker build -t 'magnetic/druid' .
+    docker build -t 'magnetic/druid' .
     popd
 }
 
 function build_behave_image(){
     pushd behave
-    sudo docker build -t 'magnetic/behave' .
-    #sudo docker run magnetic/behave:latest
+    docker build -t 'magnetic/behave' .
+    #docker run magnetic/behave:latest
     popd
 }
 
