@@ -35,6 +35,23 @@ function wait_for_container(){
     echo "$CONTAINER_NAME has started";
 }
 
+wait_for_port() {
+  local PORT=$1
+  local SERVICE_WAIT_TIMEOUT_SEC=10
+  echo "Waiting for $PORT to start..."
+  local CURRENT_WAIT_TIME=0
+  until $(nc -w 1 localhost $PORT); do
+    printf '.'
+    sleep 1
+    if [ $((++CURRENT_WAIT_TIME)) -eq $SERVICE_WAIT_TIMEOUT_SEC ]; then
+      printf "\nError: timed out while waiting for $PORT to start.\n"
+      exit 1
+    fi
+  done
+  printf '\n'
+  echo "$PORT has started";
+}
+
 function run_tests(){
     pushd behave
     virtualenv data-media-it
@@ -72,9 +89,16 @@ build_behave_image
 
 sudo docker-compose up -d  
 
-wait_for_container docker_zookeeper_1
-wait_for_container docker_kafka_1
-wait_for_container docker_samza_1
-wait_for_container docker_druid_1
+# wait_for_container docker_zookeeper_1
+# wait_for_container docker_kafka_1
+# wait_for_container docker_samza_1
+# wait_for_container docker_druid_1
+
+wait_for_port
+wait_for_port
+wait_for_port
+wait_for_port
+wait_for_port
+wait_for_port
 
 run_tests
