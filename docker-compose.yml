@@ -11,7 +11,7 @@ services:
     links:
       - zookeeper:zk
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: 10.237.18.216
+      KAFKA_ADVERTISED_HOST_NAME: 10.95.202.174
       KAFKA_ZOOKEEPER_CONNECT: "zk:2181"
       HOSTNAME_COMMAND: "route -n | awk '/UG[ \t]/{print $$2}'"
       KAFKA_CREATE_TOPICS: "itest:1:1,itest_out:1:1"
