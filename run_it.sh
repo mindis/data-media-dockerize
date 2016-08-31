@@ -18,7 +18,7 @@ function build_behave_image(){
 }
 
 function run_tests(){
-    docker run -itd -name docker_behave_1 magnetic/behave:latest
+    docker run -itd --name docker_behave_1 magnetic/behave:latest
 }
 
 function copy_logs(){
