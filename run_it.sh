@@ -94,11 +94,12 @@ sudo docker-compose up -d
 # wait_for_container docker_samza_1
 # wait_for_container docker_druid_1
 
-wait_for_port
-wait_for_port
-wait_for_port
-wait_for_port
-wait_for_port
-wait_for_port
+wait_for_port 2181
+wait_for_port 9092
+wait_for_port 8083
+wait_for_port 8082
+wait_for_port 8081
+wait_for_port 8090
+wait_for_port 8091
 
 run_tests
