@@ -18,7 +18,12 @@ function build_behave_image(){
 }
 
 function run_tests(){
-    docker run -itd --name docker_behave_1 magnetic/behave:latest
+    pushd behave
+    workon data-media-it
+    pip install -r requirements.txt
+    behave
+    #docker run -itd --name docker_behave_1 magnetic/behave:latest
+    popd
 }
 
 function copy_logs(){
@@ -37,13 +42,14 @@ function copy_logs(){
 LOGDIR=$(echo $1 | sed 's:/*$::')
 
 # Destroy containers when done
-trap "copy_logs $LOGDIR && docker-compose -f docker-compose.yml down && docker rmi magnetic/samza:latest && docker rmi magnetic/druid:latest && docker rm docker_behave_1 && docker rmi magnetic/behave:latest" EXIT
+#trap "copy_logs $LOGDIR && docker-compose -f docker-compose.yml down && docker rmi magnetic/samza:latest && docker rmi magnetic/druid:latest && docker rm docker_behave_1 && docker rmi magnetic/behave:latest" EXIT
+trap "copy_logs $LOGDIR " EXIT
 
-build_samza_image
-build_druid_image
-build_behave_image
+#build_samza_image
+#build_druid_image
+#build_behave_image
 
-sudo docker-compose up -d  
+#sudo docker-compose up -d  
 
 run_tests
 
