@@ -19,12 +19,10 @@ function build_behave_image(){
 
 
 function wait_for_container(){
-    CONTAINER_URL="$1"
-    while ! curl $CONTAINER_URL
-    do
-      echo "$(date) - still waiting for $CONTAINER_URL"
-      sleep 1
-    done
+    CONTAINER_NAME="$1"
+    until [ "`sudo docker inspect -f {{.State.Running}} $CONTAINER_NAME`"=="true" ]; do
+        sleep 1;
+    done;
 }
 
 function run_tests(){
@@ -64,12 +62,9 @@ build_behave_image
 
 sudo docker-compose up -d  
 
-wait_for_container localhost:2181
-wait_for_container localhost:9092
-wait_for_container localhost:8082
-wait_for_container localhost:8081
-wait_for_container localhost:8083
-wait_for_container localhost:8091
-wait_for_container localhost:8090
+wait_for_container docker_zookeeper_1
+wait_for_container docker_kafka_1
+wait_for_container docker_samza_1
+wait_for_container docker_druid_1
 
 run_tests
