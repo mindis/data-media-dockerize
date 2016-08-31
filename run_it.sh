@@ -19,9 +19,11 @@ function build_behave_image(){
 
 function run_tests(){
     pushd behave
-    workon data-media-it
+    virtualenv data-media-it
+    source data-media-it/bin/activate
     pip install -r requirements.txt
     behave
+    deactivate
     #docker run -itd --name docker_behave_1 magnetic/behave:latest
     popd
 }
