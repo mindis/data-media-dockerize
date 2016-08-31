@@ -101,5 +101,6 @@ wait_for_port 8082
 wait_for_port 8081
 wait_for_port 8090
 wait_for_port 8091
+wait_for_port 8200
 
 run_tests
